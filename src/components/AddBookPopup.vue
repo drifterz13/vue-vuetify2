@@ -19,14 +19,15 @@
       </v-toolbar>
       <v-card-text>
         <v-form class="pa-3" @submit.prevent="addBook" ref="form">
-          <v-text-field label="Title" v-model="title"></v-text-field>
-          <v-text-field label="Price" prefix="$" v-model="price"></v-text-field>
+          <v-text-field label="Title" v-model="title" :disabled="loading"></v-text-field>
+          <v-text-field label="Price" prefix="$" v-model="price" :disabled="loading"></v-text-field>
           <v-text-field
             label="Image URL"
             placeholder="https://www.unsplash.com/nature/001"
             v-model="imageUrl"
+            :disabled="loading"
           ></v-text-field>
-          <v-textarea label="Content" v-model="content"></v-textarea>
+          <v-textarea label="Content" v-model="content" :disabled="loading"></v-textarea>
           <v-btn
             type="submit"
             class="mb-3 mt-4 subheading"
@@ -34,6 +35,7 @@
             block
             large
             color="primary"
+            :loading="loading"
           >Submit</v-btn>
         </v-form>
       </v-card-text>
@@ -46,6 +48,7 @@ export default {
   data() {
     return {
       popup: false,
+      loading: false,
       title: "",
       content: "",
       price: "",
@@ -54,14 +57,23 @@ export default {
   },
   methods: {
     addBook() {
-      this.$emit("add-book", {
+      this.loading = true;
+      const book = {
         title: this.title,
         content: this.content,
         price: this.price,
         image: this.imageUrl
+      };
+      import("@/firebase").then(({ db }) => {
+        db.collection("books")
+          .add(book)
+          .then(() => {
+            this.$emit("add-book", book);
+            this.loading = false;
+            this.popup = false;
+            this.$refs.form.reset();
+          });
       });
-      this.popup = false;
-      this.$refs.form.reset()
     }
   }
 };

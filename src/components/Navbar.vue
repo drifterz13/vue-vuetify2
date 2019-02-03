@@ -8,7 +8,7 @@
         </v-btn>
       </v-toolbar-title>
       <v-spacer></v-spacer>
-      <v-btn v-if="user" flat class="secondary--text text--darken-3">
+      <v-btn v-if="user" flat class="secondary--text text--darken-3" @click="logout">
         <span>Sign out</span>
         <v-icon right>power_settings_new</v-icon>
       </v-btn>
@@ -40,6 +40,8 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+
 export default {
   data() {
     return {
@@ -74,6 +76,33 @@ export default {
         }
       ]
     };
+  },
+  computed: {
+    getCurrentUser() {
+      return this.$store.state.user;
+    }
+  },
+  methods: {
+    ...mapMutations([
+      'loggedOut'
+    ]),
+    logout() {
+      import(/* webpackPreload: true */ '@/firebase').then(({ firebase }) => {
+        firebase.auth().signOut().then(() => {
+          this.loggedOut()
+          this.$router.push('/signin')
+        })
+      })
+    }
+  },
+  watch: {
+    getCurrentUser(newProps, oldProps) {
+      if (!oldProps && newProps) {
+        this.user = newProps
+      } else {
+        this.user = null
+      }
+    }
   }
 };
 </script>
